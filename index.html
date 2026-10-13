@@ -1,1 +1,119 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HábitoTracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <header>
+        <h1>HábitoTracker</h1>
+        <p>Gestiona tus hábitos y controla tu progreso diario.</p>
+    </header>
+
+    <nav id="menu">
+        <a href="index.html">Inicio</a>
+        <a href="#seguimiento" id="abrirSeguimiento">Ver seguimiento</a>
+    </nav>
+
+    <main>
+        <section class="panel">
+            <h2>Crear un hábito</h2>
+
+            <form id="formHabito">
+                <label for="nombreHabito">Nombre del hábito</label>
+                <input type="text" id="nombreHabito" required>
+
+                <label for="descripcionHabito">Descripción</label>
+                <textarea id="descripcionHabito"></textarea>
+
+                <label for="categoriaHabito">Categoría</label>
+                <select id="categoriaHabito" required>
+                    <option value="">Selecciona una categoría</option>
+                    <option value="Salud">Salud</option>
+                    <option value="Estudio">Estudio</option>
+                    <option value="Ocio">Ocio</option>
+                    <option value="Deporte">Deporte</option>
+                    <option value="Otros">Otros</option>
+                </select>
+
+                <button type="submit">Crear hábito</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Registrar un día</h2>
+
+            <form id="formRegistro">
+                <label for="habitoRegistro">Hábito</label>
+                <select id="habitoRegistro" required>
+                    <option value="">Primero crea un hábito</option>
+                </select>
+
+                <label for="fechaRegistro">Fecha</label>
+                <input type="date" id="fechaRegistro" required>
+
+                <label for="observacionesRegistro">Observaciones</label>
+                <textarea id="observacionesRegistro"></textarea>
+
+                <label class="casilla">
+                    <input type="checkbox" id="cumplidoRegistro">
+                    He cumplido este hábito
+                </label>
+
+                <button type="submit">Guardar registro</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Mis estadísticas</h2>
+            <div id="estadisticas">
+                <p>Total de hábitos: <span id="totalHabitos">0</span></p>
+                <p>Días cumplidos: <span id="diasCumplidos">0</span></p>
+                <p>Días fallados: <span id="diasFallados">0</span></p>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Mis hábitos</h2>
+            <ul id="listaHabitos"></ul>
+            <button type="button" id="borrarTodo" class="peligro">
+                Borrar todo
+            </button>
+        </section>
+
+        <div id="modalSeguimiento" class="modal oculto">
+            <div class="modal-contenido">
+                <button type="button" id="cerrarSeguimiento"
+                    class="cerrar" aria-label="Cerrar">✕</button>
+
+                <h2>Seguimiento de hábitos</h2>
+
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hábito</th>
+                                <th>Fecha</th>
+                                <th>Observaciones</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaRegistros"></tbody>
+                    </table>
+                </div>
+
+                <p id="resumenTabla"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>HábitoTracker · Desarrollo Web en Entorno Cliente · 2.º DAW</p>
+    </footer>
+</body>
+</html>
