@@ -2,14 +2,12 @@
 "use strict";
 
 // ==========================================
-// FASE 1: DATOS Y COOKIES JSON
+// FASE 1: COOKIES Y PERSISTENCIA
 // ==========================================
 
-// Array de hábitos y array de registros.
 let habitos = [];
 let registros = [];
 
-// Guarda cualquier valor en una cookie como JSON.
 function guardarCookie(nombre, valor) {
     const json = JSON.stringify(valor);
     const contenido = encodeURIComponent(json);
@@ -18,15 +16,15 @@ function guardarCookie(nombre, valor) {
         `${nombre}=${contenido}; max-age=31536000; path=/; SameSite=Lax`;
 }
 
-// Lee una cookie y convierte su contenido JSON en un objeto.
 function leerCookie(nombre) {
     const prefijo = `${nombre}=`;
 
     for (const cookie of document.cookie.split("; ")) {
         if (cookie.startsWith(prefijo)) {
             try {
-                const contenido = cookie.substring(prefijo.length);
-                return JSON.parse(decodeURIComponent(contenido));
+                return JSON.parse(
+                    decodeURIComponent(cookie.substring(prefijo.length))
+                );
             } catch (error) {
                 console.error("Error al leer la cookie:", nombre, error);
                 return null;
@@ -37,73 +35,39 @@ function leerCookie(nombre) {
     return null;
 }
 
-// Elimina una cookie.
 function borrarCookie(nombre) {
     document.cookie =
         `${nombre}=; max-age=0; path=/; SameSite=Lax`;
 }
 
-// Guarda los dos arrays.
 function guardarTodo() {
     guardarCookie("habitos", habitos);
     guardarCookie("registros", registros);
 }
 
-// Recupera los dos arrays al iniciar la aplicación.
 function cargarTodo() {
-    const habitosGuardados = leerCookie("habitos");
-    const registrosGuardados = leerCookie("registros");
+    const h = leerCookie("habitos");
+    const r = leerCookie("registros");
 
-    habitos = Array.isArray(habitosGuardados)
-        ? habitosGuardados
-        : [];
-
-    registros = Array.isArray(registrosGuardados)
-        ? registrosGuardados
-        : [];
-}
-
-// Prueba inicial del almacenamiento JSON.
-function probarCookiesJSON() {
-    const prueba = [
-        {
-            id: "prueba-1",
-            nombre: "Leer",
-            descripcion: "Leer durante 20 minutos",
-            categoria: "Estudio"
-        }
-    ];
-
-    guardarCookie("pruebaJSON", prueba);
-    const recuperado = leerCookie("pruebaJSON");
-
-    console.log("Array original:", prueba);
-    console.log("Array recuperado:", recuperado);
-    console.log(
-        "¿Se recuperó correctamente?",
-        JSON.stringify(prueba) === JSON.stringify(recuperado)
-    );
-
-    borrarCookie("pruebaJSON");
+    habitos = Array.isArray(h) ? h : [];
+    registros = Array.isArray(r) ? r : [];
 }
 
 
 // ==========================================
-// FASE 2: MOSTRAR Y CREAR HÁBITOS
+// FASE 2: CREACIÓN DE HÁBITOS
 // ==========================================
 
-// Genera la lista de hábitos en la página.
 function pintarHabitos() {
     const lista = document.getElementById("listaHabitos");
     lista.innerHTML = "";
 
     habitos.forEach((habito) => {
         const li = document.createElement("li");
-
         const titulo = document.createElement("strong");
-        titulo.textContent = habito.nombre;
-
         const detalle = document.createElement("span");
+
+        titulo.textContent = habito.nombre;
         detalle.textContent =
             ` — ${habito.categoria}: ${habito.descripcion || "Sin descripción"}`;
 
@@ -112,24 +76,19 @@ function pintarHabitos() {
     });
 }
 
-// Actualiza el desplegable de hábitos del formulario de registros.
 function actualizarDesplegable() {
     const selector = document.getElementById("habitoRegistro");
-    const seleccionAnterior = selector.value;
+    const anterior = selector.value;
 
     selector.innerHTML = "";
 
-    const opcionInicial = document.createElement("option");
-    opcionInicial.value = "";
+    const inicial = document.createElement("option");
+    inicial.value = "";
+    inicial.textContent = habitos.length
+        ? "Selecciona un hábito"
+        : "Primero crea un hábito";
 
-    if (habitos.length === 0) {
-        opcionInicial.textContent = "Primero crea un hábito";
-        selector.appendChild(opcionInicial);
-        return;
-    }
-
-    opcionInicial.textContent = "Selecciona un hábito";
-    selector.appendChild(opcionInicial);
+    selector.appendChild(inicial);
 
     habitos.forEach((habito) => {
         const opcion = document.createElement("option");
@@ -138,12 +97,11 @@ function actualizarDesplegable() {
         selector.appendChild(opcion);
     });
 
-    if (habitos.some((habito) => habito.id === seleccionAnterior)) {
-        selector.value = seleccionAnterior;
+    if (habitos.some((h) => h.id === anterior)) {
+        selector.value = anterior;
     }
 }
 
-// Crea un hábito al enviar el formulario.
 function crearHabito(event) {
     event.preventDefault();
 
@@ -152,42 +110,30 @@ function crearHabito(event) {
         document.getElementById("descripcionHabito").value.trim();
     const categoria = document.getElementById("categoriaHabito").value;
 
-    if (!nombre) {
-        alert("Escribe el nombre del hábito.");
-        document.getElementById("nombreHabito").focus();
+    if (!nombre || !categoria) {
+        alert("Escribe el nombre y selecciona una categoría.");
         return;
     }
 
-    if (!categoria) {
-        alert("Selecciona una categoría.");
-        document.getElementById("categoriaHabito").focus();
-        return;
-    }
-
-    const nuevoHabito = {
+    habitos.push({
         id: crypto.randomUUID(),
-        nombre: nombre,
-        descripcion: descripcion,
-        categoria: categoria
-    };
-
-    habitos.push(nuevoHabito);
+        nombre,
+        descripcion,
+        categoria
+    });
 
     guardarTodo();
     pintarHabitos();
     actualizarDesplegable();
 
     document.getElementById("formHabito").reset();
-
-    alert("Hábito creado correctamente.");
 }
 
 
 // ==========================================
-// FASE 3: REGISTRAR LOS DÍAS
+// FASE 3: REGISTRO DE DÍAS
 // ==========================================
 
-// Crea un registro asociado a un hábito mediante habitoId.
 function crearRegistro(event) {
     event.preventDefault();
 
@@ -198,61 +144,137 @@ function crearRegistro(event) {
     const cumplido =
         document.getElementById("cumplidoRegistro").checked;
 
-    if (!habitoId || !habitos.some((habito) => habito.id === habitoId)) {
+    if (!habitos.some((h) => h.id === habitoId)) {
         alert("Selecciona un hábito válido.");
         return;
     }
 
     if (!fecha) {
         alert("Selecciona una fecha.");
-        document.getElementById("fechaRegistro").focus();
         return;
     }
 
-    const nuevoRegistro = {
+    registros.push({
         id: crypto.randomUUID(),
-        habitoId: habitoId,
-        fecha: fecha,
-        observaciones: observaciones,
-        cumplido: cumplido
-    };
-
-    registros.push(nuevoRegistro);
+        habitoId,
+        fecha,
+        observaciones,
+        cumplido
+    });
 
     guardarTodo();
-
     document.getElementById("formRegistro").reset();
     actualizarDesplegable();
 
     alert("Registro guardado correctamente.");
-
-    console.log("Registros guardados:", registros);
 }
 
 
 // ==========================================
-// INICIALIZACIÓN DE LA APLICACIÓN
+// FASE 4: MODAL Y TABLA DE SEGUIMIENTO
+// ==========================================
+
+function pintarTabla() {
+    const tabla = document.getElementById("tablaRegistros");
+    const resumen = document.getElementById("resumenTabla");
+
+    tabla.innerHTML = "";
+
+    let cumplidos = 0;
+    let fallados = 0;
+
+    registros.forEach((registro) => {
+        const habito = habitos.find(
+            (h) => h.id === registro.habitoId
+        );
+
+        const fila = document.createElement("tr");
+
+        const nombre = document.createElement("td");
+        nombre.textContent = habito ? habito.nombre : "Hábito eliminado";
+
+        const fecha = document.createElement("td");
+        fecha.textContent = registro.fecha;
+
+        const observaciones = document.createElement("td");
+        observaciones.textContent = registro.observaciones || "Sin observaciones";
+
+        const estado = document.createElement("td");
+        estado.textContent = registro.cumplido ? "✓ Cumplido" : "✗ Fallado";
+        estado.className = registro.cumplido
+            ? "estado-cumplido"
+            : "estado-fallado";
+
+        const accion = document.createElement("td");
+        accion.textContent = "Fase 5";
+
+        fila.append(nombre, fecha, observaciones, estado, accion);
+        tabla.appendChild(fila);
+
+        if (registro.cumplido) {
+            cumplidos++;
+        } else {
+            fallados++;
+        }
+    });
+
+    if (registros.length === 0) {
+        const fila = document.createElement("tr");
+        const celda = document.createElement("td");
+
+        celda.colSpan = 5;
+        celda.textContent = "Todavía no hay registros.";
+        fila.appendChild(celda);
+        tabla.appendChild(fila);
+    }
+
+    resumen.textContent =
+        `Total: ${registros.length} | Cumplidos: ${cumplidos} | Fallados: ${fallados}`;
+}
+
+function abrirModal() {
+    pintarTabla();
+    document.getElementById("modalSeguimiento").classList.remove("oculto");
+}
+
+function cerrarModal() {
+    document.getElementById("modalSeguimiento").classList.add("oculto");
+}
+
+
+// ==========================================
+// INICIALIZACIÓN
 // ==========================================
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Recuperamos los datos guardados.
     cargarTodo();
 
-    // Conectamos los formularios con sus funciones.
     document.getElementById("formHabito")
         .addEventListener("submit", crearHabito);
 
     document.getElementById("formRegistro")
         .addEventListener("submit", crearRegistro);
 
-    // Mostramos los datos recuperados.
+    document.getElementById("abrirSeguimiento")
+        .addEventListener("click", (event) => {
+            event.preventDefault();
+            abrirModal();
+        });
+
+    document.getElementById("cerrarSeguimiento")
+        .addEventListener("click", cerrarModal);
+
+    document.getElementById("modalSeguimiento")
+        .addEventListener("click", (event) => {
+            if (event.target === event.currentTarget) {
+                cerrarModal();
+            }
+        });
+
     pintarHabitos();
     actualizarDesplegable();
 
-    // Comprobamos el almacenamiento JSON.
-    probarCookiesJSON();
-
     console.log("HábitoTracker iniciado.");
-    console.log("Hábitos recuperados:", habitos);
-    console.log("Registros recuperados:", registros);
+    console.log("Hábitos:", habitos);
+    console.log("Registros:", registros);
 });
